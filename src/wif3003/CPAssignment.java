@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cpassignment;
+package wif3003;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +27,7 @@ public class CPAssignment {
     static volatile boolean done = false;
 
     public static void main(String[] args) {
-        game(100, 10, 10);
+        game(400, 10, 10);
     }
 
     public static void game(int n, int t, int m) {
@@ -87,13 +87,17 @@ public class CPAssignment {
                         Point firstPoint = points[random.nextInt(n)];
                         Point secondPoint = points[random.nextInt(n)];
 
-                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
+//                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
+//                            failCount ++;
+//                            continue;
+//                        }
+//
+//                        firstPoint.setUsed(true);
+//                        secondPoint.setUsed(true);
+                        if(firstPoint.use() && secondPoint.use()) {
                             failCount ++;
                             continue;
                         }
-
-                        firstPoint.setUsed(true);
-                        secondPoint.setUsed(true);
                     }
 
                     Thread currentThread = Thread.currentThread();
@@ -107,10 +111,12 @@ public class CPAssignment {
 
         try {
 
-            mainLatch.await(maxTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-
+//            mainLatch.await(maxTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+            boolean rsult = mainLatch.await(m * 1000, TimeUnit.MILLISECONDS);
+            System.out.printf("Run : %b\n", rsult);
             done = true;
         } catch (InterruptedException e) {
+            System.out.println("\tError");
             e.printStackTrace();
         }
 
@@ -121,17 +127,185 @@ public class CPAssignment {
     }
 }
 
+interface DrawPointInterface {
+    void draw(double x, double y);
+}
+
+interface DrawLineInterface {
+    void draw(double x1, double y1, double x2, double y2);
+}
+
+class CPGame {
+    
+    static volatile boolean done = false;
+    int n, t, m;
+    long maxTime;
+    Random random;
+    Set<Point> pointSet;
+    Map<Thread, Integer> threadCountMap;
+    CountDownLatch mainLatch;
+    CyclicBarrier barrier;
+    Point[] points;
+    
+    DrawPointInterface drawPoint;
+    DrawLineInterface drawLine;
+    
+    public CPGame(int n, int t, int m, DrawPointInterface dp, DrawLineInterface dl) {
+        drawPoint = dp;
+        drawLine = dl;
+        if (n <= t){
+            t = n;
+        }
+        this.n = n;
+        this.t = t;
+        this.m = m;
+        
+        this.maxTime = System.currentTimeMillis() + m * 1000;
+
+        this.random = new Random();
+
+        this.pointSet = new HashSet<>(n);
+
+        this.threadCountMap = new HashMap<>();
+
+        this.mainLatch = new CountDownLatch(1);
+
+        this.barrier = new CyclicBarrier(t);
+
+        while (pointSet.size() < n) {
+            int x = random.nextInt(1001);
+            int y = random.nextInt(1001);
+            Point point = new Point(x, y);
+            pointSet.add(point);
+        }
+
+        int index = 0;
+        points = new Point[pointSet.size()];
+        for (Point point: pointSet){
+            points[index] = point;
+            if(drawPoint != null) {
+                drawPoint.draw(point.getX(), point.getY());
+            }
+            index++;
+        }
+    }
+    
+    public void runConcurrentGame() {
+        for (int i = 0; i < t; i ++) {
+            Thread thread = new Thread(() -> {
+
+                int failCount = 0;
+                try {
+
+                    barrier.await();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                while (!done) {
+
+                    synchronized (CPGame.class) {
+                        if (failCount == 20) {
+                            if(!done) {
+                                done = true;
+                                mainLatch.countDown();
+                            }
+                            return;
+                        }
+
+                        Point firstPoint = points[random.nextInt(n)];
+                        Point secondPoint = points[random.nextInt(n)];
+
+//                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
+//                            failCount ++;
+//                            continue;
+//                        }
+//
+//                        firstPoint.setUsed(true);
+//                        secondPoint.setUsed(true);
+                        if(!(firstPoint.use() && secondPoint.use())) {
+                            failCount ++;
+                            continue;
+                        }
+                        drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+                    }
+
+                    Thread currentThread = Thread.currentThread();
+                    threadCountMap.put(currentThread, threadCountMap.get(currentThread) + 1);
+                }
+            }, "thread-" + i);
+
+            threadCountMap.put(thread, 0);
+            thread.start();
+        }
+
+        try {
+
+//            mainLatch.await(maxTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+            boolean rsult = mainLatch.await(m * 1000, TimeUnit.MILLISECONDS);
+            System.out.printf("Run : %b\n", rsult);
+            done = true;
+        } catch (InterruptedException e) {
+            System.out.println("\tError");
+            e.printStackTrace();
+        }
+
+
+        for(Map.Entry<Thread, Integer> entry : threadCountMap.entrySet()) {
+            System.out.println(entry.getKey().getName() + " created count: " + entry.getValue());
+        }
+    }
+    
+    public void runSingleThreadGame() {
+        int failCount = 0;
+        int count = 0;
+        System.out.println("\tStart");
+        while (!done) {
+
+            if (failCount >= 20) {
+                if(!done) {
+                    done = true;
+//                    mainLatch.countDown();
+                }
+            }
+
+            Point firstPoint = points[random.nextInt(n)];
+            Point secondPoint = points[random.nextInt(n)];
+
+//                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
+//                            failCount ++;
+//                            continue;
+//                        }
+//
+//                        firstPoint.setUsed(true);
+//                        secondPoint.setUsed(true);
+            if(!(firstPoint.use() && secondPoint.use())) {
+                failCount ++;
+                System.out.printf("\tPoints used, fail count %d\n", failCount);
+                continue;
+            }
+            System.out.printf("\tLine %d draw\n", count+1);
+            drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+
+            count ++;
+        }
+        System.out.printf("Single Thread tried %d times\n", count);
+    }
+}
 
 class Point {
-    private int x;
-    private int y;
+    private double x;
+    private double y;
 
     private boolean used;
 
-    public Point(int x, int y) {
+    public Point(double x, double y) {
         this.x = x;
         this.y = y;
     }
+    
+    public double getX() {return x;}
+    public double getY() {return y;}
 
     @Override
     public boolean equals(Object o) {
@@ -161,5 +335,14 @@ class Point {
 
     public void setUsed(boolean used) {
         this.used = used;
+    }
+    
+    synchronized boolean use() {
+        // true mean can use
+        // false mean cant use, used before
+        if(this.used) 
+            return false;
+        this.used = true;
+        return true;
     }
 }

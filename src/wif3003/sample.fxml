@@ -17,15 +17,45 @@
         -fx-border-width: 2;
         -fx-border-insets: 5;
         -fx-border-radius: 5;
-        -fx-border-color: blue;
+<!--        -fx-border-color: blue;-->
     </style>
     <children>
-        <Label fx:id="inputLbl" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Please insert Your Input here:" textAlignment="LEFT" />
-        <TextField fx:id="inputText" prefWidth="100.0" />
-        <Button fx:id="okBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#printOutput" text="OK" textAlignment="CENTER" />
-        <Button fx:id="resetBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#resetCanvas" text="Reset" textAlignment="CENTER" />
-        <Label fx:id="outputLbl" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Your Input:" textAlignment="LEFT" />
-        <TextArea fx:id="outputText" prefHeight="100.0" prefWidth="200.0" wrapText="true" />
-        <GridPane fx:id="insideBox" prefWidth="360" prefHeight="300"></GridPane>
+        <GridPane fx:id="Row" hgap="10" vgap="10">
+            <VBox xmlns:fx="http://javafx.com/fxml" alignment="center" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                <style>
+                    -fx-padding: 10;
+                    -fx-border-style: solid inside;
+                    -fx-border-width: 2;
+                    -fx-border-insets: 5;
+                    -fx-border-radius: 5;
+                    -fx-border-color: blue;
+                </style>
+                <children>
+                    <Label fx:id="inputLbl_n" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Number of points:" textAlignment="LEFT" />
+                    <TextField fx:id="inputText_n" prefWidth="100.0" />
+                    <Label fx:id="inputLbl_t" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Number of threads:" textAlignment="LEFT" />
+                    <TextField fx:id="inputText_t" prefWidth="100.0" />
+                    <Label fx:id="inputLbl_m" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Max time (seconds):" textAlignment="LEFT" />
+                    <TextField fx:id="inputText_m" prefWidth="100.0" />
+                    <Button fx:id="okBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#setParams" text="OK" textAlignment="CENTER" />
+                    <Button fx:id="resetBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#resetCanvas" text="Reset" textAlignment="CENTER" />
+                    <Button fx:id="runBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#runGame" text="Run Game" textAlignment="CENTER" />
+                    <Label fx:id="outputLbl" alignment="CENTER" cache="true" cacheHint="SCALE" prefHeight="90.0" prefWidth="400.0" text="" textAlignment="CENTER" wrapText="true"/>
+                </children>
+            </VBox>
+            <VBox xmlns:fx="http://javafx.com/fxml" alignment="center" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <style>
+                    -fx-padding: 16;
+                    -fx-border-style: solid inside;
+                    -fx-border-width: 2;
+                    -fx-border-insets: 5;
+                    -fx-border-radius: 5;
+                    -fx-border-color: blue;
+                </style>
+                <children>
+                    <GridPane fx:id="insideBox" prefWidth="800" prefHeight="800"></GridPane>
+                </children>
+            </VBox>
+        </GridPane>
     </children>
 </VBox>
