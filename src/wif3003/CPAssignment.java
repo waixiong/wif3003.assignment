@@ -73,17 +73,11 @@ public class CPAssignment {
                     e.printStackTrace();
                 }
 
-                while (!done) {
+                while (true) {
 
                     synchronized (CPAssignment.class) {
-                        if (failCount == 20) {
-                            if(!done) {
-                                done = true;
-                                mainLatch.countDown();
-                            }
-                            return;
-                        }
-
+                        if(done) return;
+                        
                         Point firstPoint = points[random.nextInt(n)];
                         Point secondPoint = points[random.nextInt(n)];
 
@@ -96,6 +90,14 @@ public class CPAssignment {
 //                        secondPoint.setUsed(true);
                         if(firstPoint.use() && secondPoint.use()) {
                             failCount ++;
+                            
+                            if (failCount == 20) {
+                                if(!done) {
+                                    mainLatch.countDown();
+                                    done = true;
+                                }
+                                return;
+                            }
                             continue;
                         }
                     }
