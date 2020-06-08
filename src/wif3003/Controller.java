@@ -175,6 +175,8 @@ public class Controller {
         insideBox.getChildren().add(canvasPoint);
         canvasLine = new Canvas(800, 800);
         insideBox.getChildren().add(canvasLine);
+        
+        game = null;
     }
     
     @FXML
@@ -183,6 +185,7 @@ public class Controller {
             outputLbl.setText("Please init game first");
             return;
         }
-        game.runSingleThreadGame();
+//        game.runSingleThreadGame();
+        game.runConcurrentGame();
     }
 }
