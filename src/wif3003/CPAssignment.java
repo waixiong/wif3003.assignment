@@ -139,7 +139,8 @@ interface DrawLineInterface {
 
 class CPGame {
     
-    static volatile boolean done = false;
+    volatile boolean done = false;
+    volatile int failCount = 0;
     int n, t, m;
     long maxTime;
     Random random;
@@ -153,6 +154,8 @@ class CPGame {
     DrawLineInterface drawLine;
     
     public CPGame(int n, int t, int m, DrawPointInterface dp, DrawLineInterface dl) {
+        done = false;
+        failCount = 0;
         drawPoint = dp;
         drawLine = dl;
         if (n <= t){
@@ -193,31 +196,34 @@ class CPGame {
     }
     
     public void runConcurrentGame() {
+        // try only 20 times
         for (int i = 0; i < t; i ++) {
+//            System.out.printf("Thread %d\n", i);
             Thread thread = new Thread(() -> {
-
-                int failCount = 0;
+                
+                // int failCount = 0;
                 try {
-
                     barrier.await();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
+                
+                // Try to link lines
                 while (!done) {
 
                     synchronized (CPGame.class) {
-                        if (failCount == 20) {
+                        // try only 20 times
+                        if (failCount >= 10000) {
                             if(!done) {
                                 done = true;
+                                System.out.println("fail 20 times");
                                 mainLatch.countDown();
                             }
                             return;
                         }
 
                         Point firstPoint = points[random.nextInt(n)];
-                        Point secondPoint = points[random.nextInt(n)];
-
+                        Point secondPoint;
 //                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
 //                            failCount ++;
 //                            continue;
@@ -225,10 +231,24 @@ class CPGame {
 //
 //                        firstPoint.setUsed(true);
 //                        secondPoint.setUsed(true);
-                        if(!(firstPoint.use() && secondPoint.use())) {
+                        if(firstPoint.use()) {
+                            // loop get second point
+                            while(true) {
+                                secondPoint = points[random.nextInt(n)];
+                                if(secondPoint.use()) {
+                                    break;
+                                } else {
+                                    failCount ++;
+                                    // System.out.printf("\t%s 2 Points used, fail count %d\n", Thread.currentThread().getName(), failCount);
+                                    continue;
+                                }
+                            }
+                        } else {
                             failCount ++;
+                            // System.out.printf("\t%s 1 Points used, fail count %d\n", Thread.currentThread().getName(), failCount);
                             continue;
                         }
+                        System.out.printf("\t%s draw\n", Thread.currentThread().getName());
                         drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
                     }
 
@@ -244,6 +264,7 @@ class CPGame {
         try {
 
 //            mainLatch.await(maxTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+            System.out.println("Start");
             boolean rsult = mainLatch.await(m * 1000, TimeUnit.MILLISECONDS);
             System.out.printf("Run : %b\n", rsult);
             done = true;
@@ -270,9 +291,12 @@ class CPGame {
 //                    mainLatch.countDown();
                 }
             }
-
-            Point firstPoint = points[random.nextInt(n)];
-            Point secondPoint = points[random.nextInt(n)];
+            
+            int rn = random.nextInt(n);
+            Point firstPoint = points[rn];
+            System.out.printf("\t\t%d\n", rn);
+            rn = random.nextInt(n);
+            Point secondPoint = points[rn];
 
 //                        if(firstPoint.isUsed() || secondPoint.isUsed()) {
 //                            failCount ++;
@@ -281,9 +305,28 @@ class CPGame {
 //
 //                        firstPoint.setUsed(true);
 //                        secondPoint.setUsed(true);
-            if(!(firstPoint.use() && secondPoint.use())) {
+//            if(!(firstPoint.use() && secondPoint.use())) {
+//                failCount ++;
+//                System.out.printf("\tPoints used, fail count %d\n", failCount);
+//                continue;
+//            }
+            if(firstPoint.use()) {
+                // loop get second point
+                while(true) {
+                    rn = random.nextInt(n);
+                    secondPoint = points[rn];
+                    System.out.printf("\t\t%d\n", rn);
+                    if(secondPoint.use()) {
+                        break;
+                    } else {
+                        failCount ++;
+                        System.out.printf("\t2 Points used, fail count %d\n", failCount);
+                        continue;
+                    }
+                }
+            } else {
                 failCount ++;
-                System.out.printf("\tPoints used, fail count %d\n", failCount);
+                System.out.printf("\t1 Points used, fail count %d\n", failCount);
                 continue;
             }
             System.out.printf("\tLine %d draw\n", count+1);
@@ -304,6 +347,7 @@ class Point {
     public Point(double x, double y) {
         this.x = x;
         this.y = y;
+        this.used = false;
     }
     
     public double getX() {return x;}
