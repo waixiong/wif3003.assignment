@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,16 +27,19 @@ public class CPAssignment {
      * @param args the command line arguments
      */
     static volatile boolean done = false;
+    static boolean sleep = false;
 
     public static void main(String[] args) {
-        game(400, 10, 10);
+        game(400, 10, 10, false);
     }
 
-    public static void game(int n, int t, int m) {
+    public static void game(int n, int t, int m, boolean s) {
         if (n <= t){
             System.out.println("Number of points(n) must be greater than number of threads(t)");
             return;
         }
+        
+        sleep = s;
         
         long maxTime = System.currentTimeMillis() + m * 1000;
 
@@ -134,7 +139,7 @@ interface DrawPointInterface {
 }
 
 interface DrawLineInterface {
-    void draw(double x1, double y1, double x2, double y2);
+    void draw(double x1, double y1, double x2, double y2, int c);
 }
 
 class CPGame {
@@ -153,7 +158,11 @@ class CPGame {
     DrawPointInterface drawPoint;
     DrawLineInterface drawLine;
     
-    public CPGame(int n, int t, int m, DrawPointInterface dp, DrawLineInterface dl) {
+    String result = "";
+    boolean sleep = false;
+    
+    public CPGame(int n, int t, int m, DrawPointInterface dp, DrawLineInterface dl, boolean sleep) {
+        this.sleep = sleep;
         done = false;
         failCount = 0;
         drawPoint = dp;
@@ -201,7 +210,8 @@ class CPGame {
 //            System.out.printf("Thread %d\n", i);
             Thread thread = new Thread(() -> {
                 
-                // int failCount = 0;
+                // id - random number for color
+                int id = new Random().nextInt(65536);
                 try {
                     barrier.await();
                 } catch (Exception e) {
@@ -213,7 +223,7 @@ class CPGame {
 
                     synchronized (CPGame.class) {
                         // try only 20 times
-                        if (failCount >= 10000) {
+                        if (failCount >= 20) {
                             if(!done) {
                                 done = true;
                                 System.out.println("fail 20 times");
@@ -249,11 +259,23 @@ class CPGame {
                             continue;
                         }
                         System.out.printf("\t%s draw\n", Thread.currentThread().getName());
-                        drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+//                        int threadN = i;
+                        drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id);
+//                        Thread ui = new Thread(new DrawLineRunnable(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id, drawLine));
+//                        ui.start();
                     }
 
                     Thread currentThread = Thread.currentThread();
                     threadCountMap.put(currentThread, threadCountMap.get(currentThread) + 1);
+                    
+                    // sleep before construct next line
+                    if(sleep) {
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                 }
             }, "thread-" + i);
 
@@ -275,11 +297,14 @@ class CPGame {
 
 
         for(Map.Entry<Thread, Integer> entry : threadCountMap.entrySet()) {
-            System.out.println(entry.getKey().getName() + " created count: " + entry.getValue());
+            String result = entry.getKey().getName() + " created count: " + entry.getValue();
+            System.out.println(result);
+            this.result += result + "\n";
         }
     }
     
     public void runSingleThreadGame() {
+        int id = new Random().nextInt(65536);
         int failCount = 0;
         int count = 0;
         System.out.println("\tStart");
@@ -330,7 +355,7 @@ class CPGame {
                 continue;
             }
             System.out.printf("\tLine %d draw\n", count+1);
-            drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+            drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id);
 
             count ++;
         }
