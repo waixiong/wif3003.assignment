@@ -134,7 +134,7 @@ interface DrawPointInterface {
 }
 
 interface DrawLineInterface {
-    void draw(double x1, double y1, double x2, double y2);
+    void draw(double x1, double y1, double x2, double y2, int c);
 }
 
 class CPGame {
@@ -201,7 +201,8 @@ class CPGame {
 //            System.out.printf("Thread %d\n", i);
             Thread thread = new Thread(() -> {
                 
-                // int failCount = 0;
+                // id - random number for color
+                int id = new Random().nextInt(65536);
                 try {
                     barrier.await();
                 } catch (Exception e) {
@@ -213,7 +214,7 @@ class CPGame {
 
                     synchronized (CPGame.class) {
                         // try only 20 times
-                        if (failCount >= 10000) {
+                        if (failCount >= 20) {
                             if(!done) {
                                 done = true;
                                 System.out.println("fail 20 times");
@@ -249,7 +250,10 @@ class CPGame {
                             continue;
                         }
                         System.out.printf("\t%s draw\n", Thread.currentThread().getName());
-                        drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+//                        int threadN = i;
+                        drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id);
+//                        Thread ui = new Thread(new DrawLineRunnable(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id, drawLine));
+//                        ui.start();
                     }
 
                     Thread currentThread = Thread.currentThread();
@@ -280,6 +284,7 @@ class CPGame {
     }
     
     public void runSingleThreadGame() {
+        int id = new Random().nextInt(65536);
         int failCount = 0;
         int count = 0;
         System.out.println("\tStart");
@@ -330,7 +335,7 @@ class CPGame {
                 continue;
             }
             System.out.printf("\tLine %d draw\n", count+1);
-            drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY());
+            drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id);
 
             count ++;
         }
