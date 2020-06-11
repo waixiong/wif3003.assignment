@@ -15,6 +15,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -33,6 +34,9 @@ public class Controller {
     
     @FXML
     private TextField inputText_m;
+    
+    @FXML
+    private ToggleButton stoggles;
 
     // The reference of outputText will be injected by the FXML loader
 //    @FXML
@@ -66,7 +70,8 @@ public class Controller {
     @FXML
     private void initialize()
     {
-        Platform.setImplicitExit(false);
+//        Platform.setImplicitExit(false);
+        stoggles.selectedProperty();
         insideBox.getChildren().add(canvas);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setStroke(Color.BLUE);
@@ -139,10 +144,12 @@ public class Controller {
     private void setParams()
     {
         int n, t, m;
+        boolean sleep;
         try {
             n = Integer.parseInt(inputText_n.getText());
             t = Integer.parseInt(inputText_t.getText());
             m = Integer.parseInt(inputText_m.getText());
+            sleep = stoggles.selectedProperty().get();
         } catch(Exception e) {
             outputLbl.setText("Please enter Integer");
             return;
@@ -156,7 +163,7 @@ public class Controller {
         }
         
         resetCanvas();
-        game = new CPGame(n, t, m, _drawPoint, _drawLine);
+        game = new CPGame(n, t, m, _drawPoint, _drawLine, sleep);
         outputLbl.setText("Okay, game is created");
 
 //        GraphicsContext gc = canvas2.getGraphicsContext2D();
@@ -212,8 +219,17 @@ public class Controller {
             return;
         }
 //        game.runSingleThreadGame();
-        game.runConcurrentGame();
-        outputLbl.setText("Game finish");
+//        Platform.runLater(() -> {
+//            game.runConcurrentGame();
+//            outputLbl.setText("Game finish");
+//        });
+        Thread main = new Thread(() -> {
+            game.runConcurrentGame();
+            Platform.runLater(() -> {
+                outputLbl.setText(game.result);
+            });        
+        });
+        main.start();
     }
 }
 
@@ -257,5 +273,6 @@ class DrawLineRunnable implements Runnable {
         gc.moveTo(x1, y1);
         gc.lineTo(x2, y2);
         gc.stroke();
+//        System.out.println("\t\tUI drawed");
     }
 }

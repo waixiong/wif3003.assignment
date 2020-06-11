@@ -8,6 +8,7 @@
 <!--<GridPane fx:controller="sample.Controller"-->
 <!--          xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">-->
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.canvas.Canvas?>
 <VBox fx:controller="wif3003.Controller"
       xmlns:fx="http://javafx.com/fxml" alignment="center">
@@ -37,6 +38,15 @@
                     <TextField fx:id="inputText_t" prefWidth="100.0" />
                     <Label fx:id="inputLbl_m" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Max time (seconds):" textAlignment="LEFT" />
                     <TextField fx:id="inputText_m" prefWidth="100.0" />
+                    <Label fx:id="stoggleLbl" alignment="CENTER_LEFT" cache="true" cacheHint="SCALE" prefHeight="30.0" prefWidth="200.0" text="Sleep (50 ms):" textAlignment="LEFT" />
+                    <HBox fillHeight="true" >
+                        <ToggleButton fx:id="stoggles" prefWidth="100.0" text="Sleep">
+                            <toggleGroup>
+                                <ToggleGroup fx:id="sleep"/>
+                            </toggleGroup>
+                        </ToggleButton>
+<!--                        <ToggleButton fx:id="stogglens" prefWidth="100.0" text="No sleep" toggleGroup="$sleep"/>-->
+                    </HBox>
                     <Button fx:id="okBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#setParams" text="OK" textAlignment="CENTER" />
                     <Button fx:id="resetBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#resetCanvas" text="Reset" textAlignment="CENTER" />
                     <Button fx:id="runBtn" alignment="CENTER_RIGHT" contentDisplay="CENTER" mnemonicParsing="false" onAction="#runGame" text="Run Game" textAlignment="CENTER" />
