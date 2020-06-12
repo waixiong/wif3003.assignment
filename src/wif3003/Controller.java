@@ -5,8 +5,11 @@
  */
 package wif3003;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 
 import javafx.fxml.FXML;
@@ -117,7 +120,7 @@ public class Controller {
     @FXML
     private void drawLine(double x1, double y1, double x2, double y2, int colorTag)
     {   
-        Platform.runLater(new DrawLineRunnable(x1, y1, x2, y2, colorTag, canvasLines, insideBox));
+        Platform.runLater(new DrawLineRunnable(x1, y1, x2, y2, colorTag, canvasLines, insideBox, game));
 //        Canvas canvasLine = canvasLines.get(colorTag);
 //        if(canvasLine == null) {
 //            canvasLine = new Canvas(800, 800);
@@ -242,8 +245,9 @@ class DrawLineRunnable implements Runnable {
 //    DrawLineInterface drawLine;
     Map<Integer, Canvas> canvasLines;
     GridPane insideBox;
+    CPGame game; // for file writer
     
-    public DrawLineRunnable(double x1, double y1, double x2, double y2, int colorTag, Map<Integer, Canvas> canvasLines, GridPane insideBox) {
+    public DrawLineRunnable(double x1, double y1, double x2, double y2, int colorTag, Map<Integer, Canvas> canvasLines, GridPane insideBox, CPGame game) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -251,6 +255,7 @@ class DrawLineRunnable implements Runnable {
         this.colorTag = colorTag;
         this.canvasLines = canvasLines;
         this.insideBox = insideBox;
+        this.game = game;
     }
 
     @Override
@@ -273,6 +278,12 @@ class DrawLineRunnable implements Runnable {
         gc.moveTo(x1, y1);
         gc.lineTo(x2, y2);
         gc.stroke();
-//        System.out.println("\t\tUI drawed");
+        try {
+            //        System.out.println("\t\tUI drawed");
+            game.fw.write(String.format("\tUI drawed (%.0f, %.0f), (%.0f, %.0f)\n", x1, y1, x2, y2));
+        } catch (IOException ex) {
+            // ignore error
+            // Logger.getLogger(DrawLineRunnable.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
