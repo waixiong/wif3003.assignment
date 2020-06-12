@@ -5,15 +5,10 @@
  */
 package wif3003;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +23,7 @@ public class CPAssignment {
      */
     static volatile boolean done = false;
     static boolean sleep = false;
+    static File file;
 
     public static void main(String[] args) {
         game(400, 10, 10, false);
@@ -161,7 +157,17 @@ class CPGame {
     String result = "";
     boolean sleep = false;
     
+    FileWriter fw;
+    
     public CPGame(int n, int t, int m, DrawPointInterface dp, DrawLineInterface dl, boolean sleep) {
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss_z");
+        Date date = new Date(System.currentTimeMillis());
+        File file = new File("wif3003_"+formatter.format(date)+".txt" );
+        try {
+            this.fw = new FileWriter(file.getAbsoluteFile(), true);
+        } catch (IOException ex) {
+            Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+        }
         this.sleep = sleep;
         done = false;
         failCount = 0;
@@ -227,6 +233,11 @@ class CPGame {
                             if(!done) {
                                 done = true;
                                 System.out.println("fail 20 times");
+                                try {
+                                    fw.write("fail 20 times\n");
+                                } catch (IOException ex) {
+                                    Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                                 mainLatch.countDown();
                             }
                             return;
@@ -258,6 +269,11 @@ class CPGame {
                             // System.out.printf("\t%s 1 Points used, fail count %d\n", Thread.currentThread().getName(), failCount);
                             continue;
                         }
+                        try {
+                            fw.write(String.format("\t%s draw\n", Thread.currentThread().getName()));
+                        } catch (IOException ex) {
+                            Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                         System.out.printf("\t%s draw\n", Thread.currentThread().getName());
 //                        int threadN = i;
                         drawLine.draw(firstPoint.getX(), firstPoint.getY(), secondPoint.getX(), secondPoint.getY(), id);
@@ -287,11 +303,21 @@ class CPGame {
 
 //            mainLatch.await(maxTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
             System.out.println("Start");
+            try {
+                fw.write("Start\n");
+            } catch (IOException ex) {
+                Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+            }
             boolean rsult = mainLatch.await(m * 1000, TimeUnit.MILLISECONDS);
-            System.out.printf("Run : %b\n", rsult);
+//            System.out.printf("Run : %b\n", rsult);
             done = true;
         } catch (InterruptedException e) {
             System.out.println("\tError");
+            try {
+                fw.write("\tError\n");
+            } catch (IOException ex) {
+                Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
+            }
             e.printStackTrace();
         }
 
@@ -300,6 +326,12 @@ class CPGame {
             String result = entry.getKey().getName() + " created count: " + entry.getValue();
             System.out.println(result);
             this.result += result + "\n";
+        }
+        try {
+            fw.write(this.result);
+            fw.close();
+        } catch (IOException ex) {
+            Logger.getLogger(CPGame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
