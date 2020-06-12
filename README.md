@@ -15,3 +15,9 @@ There are four parameters:
 * `Number of threads` : number of threads will pick and link the points
 * `Max time (seconds)` : maximum time for program to run, program will stop either reach maximum time or reach maximum fail counts, which is 20
 * `Sleep (50ms)` : boolean value, if toggled, then the threads will sleep for 50 ms after linking two points before choosing next point
+
+
+### Java Version
+java version "1.8.0_241"  
+Java(TM) SE Runtime Environment (build 1.8.0_241-b07)  
+Java HotSpot(TM) 64-Bit Server VM (build 25.241-b07, mixed mode)
